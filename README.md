@@ -88,7 +88,7 @@ Cualquier persona puede estar en riesgo de sufrir una desaparición.
 
 La siguiente gráfica de dispersión permite identificar qué grupos de edad son los más afectados:
 
-![Edad sexo](./imgs/tasa_edad_2024.png)
+![Edad sexo](./imgs/tasa_edad_2025.png)
 
 ## Conclusión
 
