@@ -58,7 +58,7 @@ Los datos de homicidios provienen del **SESNSP (víctimas)**: [Datos abiertos de
 
 El fenómeno de las desapariciones no afecta por igual a todas las entidades federativas. Para conocer rápidamente la situación de cada estado, se puede utilizar el siguiente mapa:
 
-![Mapa estatal 2024](./imgs/estatal_2024.png)
+![Mapa estatal](./imgs/estatal_2025.png)
 
 Otra forma de identificar qué estados presentan un incremento en las desapariciones es mediante la comparación del cambio porcentual:
 
@@ -70,7 +70,7 @@ La gráfica anterior es más efectiva cuando los porcentajes no exceden el 100%.
 
 Aunque en una cantidad considerable de registros no se especifica el municipio, aún es posible identificar las regiones con mayor incidencia:
 
-![Municipal 2024](./imgs/municipal_2024.png)
+![Mapa municipal](./imgs/municipal_2025.png)
 
 Esta información también puede presentarse en formato de tabla:
 

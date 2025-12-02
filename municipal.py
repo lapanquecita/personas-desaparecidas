@@ -16,7 +16,7 @@ PLOT_COLOR = "#171010"
 PAPER_COLOR = "#2B2B2B"
 
 # La fecha en la que los datos fueron recopilados.
-FECHA_FUENTE = "01/08/2025"
+FECHA_FUENTE = "01/12/2025"
 
 
 def crear_mapa(año):
@@ -544,6 +544,6 @@ def absolutos_municipios(año):
 
 
 if __name__ == "__main__":
-    crear_mapa(2024)
-    tasa_municipios(2024)
-    absolutos_municipios(2024)
+    crear_mapa(2025)
+    tasa_municipios(2025)
+    absolutos_municipios(2025)

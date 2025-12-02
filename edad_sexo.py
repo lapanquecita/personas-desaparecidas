@@ -14,29 +14,31 @@ PLOT_COLOR = "#171010"
 PAPER_COLOR = "#2B2B2B"
 
 # La fecha en la que los datos fueron recopilados.
-FECHA_FUENTE = "01/11/2025"
+FECHA_FUENTE = "01/12/2025"
 
 
-# Estos serán nuestros grupos etarios.
-EDADES = [
-    (0, 4),
-    (5, 9),
-    (10, 14),
-    (15, 19),
-    (20, 24),
-    (25, 29),
-    (30, 34),
-    (35, 39),
-    (40, 44),
-    (45, 49),
-    (50, 54),
-    (55, 59),
-    (60, 64),
-    (65, 69),
-    (70, 74),
-    (75, 79),
-    (80, 84),
-    (85, 120),
+# Estos bins serán usados para agrupar las edades.
+BINS = [0, 4, 9, 14, 19, 24, 29, 34, 39, 44, 49, 54, 59, 64, 69, 74, 79, 84, 120]
+
+LABELS = [
+    "0-4",
+    "5-9",
+    "10-14",
+    "15-19",
+    "20-24",
+    "25-29",
+    "30-34",
+    "35-39",
+    "40-44",
+    "45-49",
+    "50-54",
+    "55-59",
+    "60-64",
+    "65-69",
+    "70-74",
+    "75-79",
+    "80-84",
+    "≥85",
 ]
 
 
@@ -51,6 +53,18 @@ def tasa_edad(año):
         El año que nos interesa graficar.
 
     """
+
+    # Cargamos el dataset de la población de hombres por grupos de edad.
+    hombres_pop = pd.read_csv("./assets/poblacion_quinquenal/hombres.csv", index_col=0)
+
+    # Seleccionamos la población del año que nos interesa.
+    hombres_pop = hombres_pop[str(año)]
+
+    # Cargamos el dataset de la población de mujeres por grupos de edad.
+    mujeres_pop = pd.read_csv("./assets/poblacion_quinquenal/mujeres.csv", index_col=0)
+
+    # Seleccionamos la población del año que nos interesa.
+    mujeres_pop = mujeres_pop[str(año)]
 
     # Cargamos el dataset de personas desaparecidas.
     df = pd.read_csv("./data.csv", dtype={"CVE_ENT": str})
@@ -76,60 +90,35 @@ def tasa_edad(año):
     # calculamos la edad al momento de la desaparición.
     df["EDAD"] = df["FECHA_DESAPARICION"].dt.year - df["FECHA_NACIMIENTO"].dt.year
 
-    data = list()
+    # Categorizamos la edad.
+    df["EDAD"] = pd.cut(df["EDAD"], bins=BINS, labels=LABELS, include_lowest=True)
 
-    # Iteramos sobre todos nuestros grupos de edad y contamos los registros
-    # para cada uno.
-    for a, b in EDADES:
-        temp_mujeres = df[(df["SEXO"] == "MUJER") & (df["EDAD"].between(a, b))]
-        temp_hombres = df[(df["SEXO"] == "HOMBRE") & (df["EDAD"].between(a, b))]
+    # Contamos el total de registros por grupo de edad y sexo.
+    df = df.pivot_table(
+        index="EDAD",
+        columns="SEXO",
+        values="ENTIDAD",
+        aggfunc="count",
+        observed=True,
+    )
 
-        # Para el último grupo de edad le agregamos el símbolo de 'mayor o igual que'
-        # para que coincida con el índice de los datasets de población quinquenal.
-        data.append(
-            {
-                "edad": f"{a}-{b}" if a < 85 else "≥85",
-                "mujeres": len(temp_mujeres),
-                "hombres": len(temp_hombres),
-            }
-        )
+    # Agregamos la columna de población para cada sexo.
+    df["poblacion_hombres"] = hombres_pop
+    df["poblacion_mujeres"] = mujeres_pop
 
-    # Creamos un DataFrame con los conteos de cada grupo de edad y sexo.
-    final = pd.DataFrame.from_records(data, index="edad")
-
-    # Cargamos el dataset de la población de hombres por grupos de edad.
-    hombres_pop = pd.read_csv("./assets/poblacion_quinquenal/hombres.csv", index_col=0)
-
-    # Seleccionamos la población del año que nos interesa.
-    hombres_pop = hombres_pop[str(año)]
-
-    # Agregamos la columna de población de hombres.
-    final["poblacion_hombres"] = hombres_pop
-
-    # Calculamos la tasa por cada 100k hombres para cada grupo de edad.
-    final["tasa_hombres"] = final["hombres"] / final["poblacion_hombres"] * 100000
-
-    # Cargamos el dataset de la población de mujeres por grupos de edad.
-    mujeres_pop = pd.read_csv("./assets/poblacion_quinquenal/mujeres.csv", index_col=0)
-
-    # Seleccionamos la población del año que nos interesa.
-    mujeres_pop = mujeres_pop[str(año)]
-
-    # Agregamos la columna de población de mujeres.
-    final["poblacion_mujeres"] = mujeres_pop
-
-    # Calculamos la tasa por cada 100k mujeres para cada grupo de edad.
-    final["tasa_mujeres"] = final["mujeres"] / final["poblacion_mujeres"] * 100000
+    # Calculamos la tasa por cada 100,000 hombres para cada grupo de edad.
+    df["tasa_hombres"] = df["HOMBRE"] / df["poblacion_hombres"] * 100000
+    df["tasa_mujeres"] = df["MUJER"] / df["poblacion_mujeres"] * 100000
 
     fig = go.Figure()
 
     # Agregamos la gráfica de dispersión para hombres.
     fig.add_trace(
         go.Scatter(
-            x=final.index,
-            y=final["tasa_hombres"],
+            x=df.index,
+            y=df["tasa_hombres"],
             mode="markers",
-            name=f"<b>Hombres</b><br>{final['hombres'].sum():,.0f} víctimas",
+            name=f"<b>Hombres</b><br>{df['HOMBRE'].sum():,.0f} víctimas",
             marker_color="#00e5ff",
             marker_symbol="circle-open",
             marker_size=36,
@@ -140,10 +129,10 @@ def tasa_edad(año):
     # Agregamos la gráfica de dispersión para mujeres.
     fig.add_trace(
         go.Scatter(
-            x=final.index,
-            y=final["tasa_mujeres"],
+            x=df.index,
+            y=df["tasa_mujeres"],
             mode="markers",
-            name=f"<b>Mujeres</b><br>{final['mujeres'].sum():,.0f} víctimas",
+            name=f"<b>Mujeres</b><br>{df['MUJER'].sum():,.0f} víctimas",
             marker_color="#ffea00",
             marker_symbol="diamond-open",
             marker_size=36,
@@ -152,7 +141,7 @@ def tasa_edad(año):
     )
 
     fig.update_xaxes(
-        range=[-0.7, len(final) - 0.3],
+        range=[-0.7, len(df) - 0.3],
         ticks="outside",
         ticklen=10,
         zeroline=False,
@@ -162,7 +151,7 @@ def tasa_edad(año):
         showgrid=True,
         gridwidth=0.5,
         mirror=True,
-        nticks=len(final) + 1,
+        nticks=len(df) + 1,
     )
 
     fig.update_yaxes(
